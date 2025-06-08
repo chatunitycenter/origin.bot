@@ -1,0 +1,11 @@
+// Plugin .tieni - manda una foto a visual
+const handler = async (m, { conn }) => {
+  await conn.sendMessage(m.chat, {
+    image: { url: './tieni.jpg' }, // Assicurati che il file esista nella root del bot
+    viewOnce: true,
+    caption: '*𝐓𝐈𝐄𝐍𝐈 𝐒𝐓𝐎 𝐂𝐀𝐙𝐙𝐎*'
+  }, { quoted: m });
+};
+
+handler.command = /^tieni$/i;
+export default handler;

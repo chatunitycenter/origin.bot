@@ -1,0 +1,54 @@
+import fetch from 'node-fetch';
+
+const handler = async (m, { conn, participants }) => {
+  const lowerText = m.text?.toLowerCase();
+
+  // Se il messaggio NON contiene la parola chiave, esci
+  if (!lowerText || !lowerText.includes('sparisci')) return;
+
+  if (!m.isGroup) return;
+
+  const userToKick = m.mentionedJid[0] || m.quoted?.sender;
+
+  if (!userToKick) {
+    return m.reply('Tagga o rispondi a qualcuno con “sparisci” per rimuoverlo.');
+  }
+
+  if (!participants.some(p => p.id === userToKick)) {
+    return m.reply('Questa persona non è nel gruppo.');
+  }
+
+  // Elimina il messaggio a cui hai risposto (se esiste)
+  if (m.quoted) {
+    await conn.sendMessage(m.chat, { delete: m.quoted.vM.key });
+  }
+
+  const warningMsg = await getBuffer('https://telegra.ph/file/99c27842d50f00c11320f.jpg');
+
+  await conn.sendMessage(m.chat, {
+    image: warningMsg,
+    caption: '*L\'utente è stato rimosso dal gruppo.*',
+    mentions: [userToKick]
+  }, { quoted: m });
+
+  await conn.groupParticipantsUpdate(m.chat, [userToKick], 'remove');
+};
+
+handler.customPrefix = /sparisci/i;
+handler.command = new RegExp(); // necessario per non usare comandi classici
+handler.group = true;
+handler.admin = true;
+handler.botAdmin = true;
+export default handler;
+
+// Funzione getBuffer
+async function getBuffer(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Errore nel fetch: ${res.status}`);
+    return await res.buffer();
+  } catch (e) {
+    console.error('Errore in getBuffer:', e);
+    return null;
+  }
+}

@@ -1,0 +1,73 @@
+let handler = async (m, { conn, args, isOwner }) => {
+    // Inizializzazione utente
+    if (!global.db.data.users[m.sender]) {
+        global.db.data.users[m.sender] = { messaggi: 0, vittorie: 0, sconfitte: 0 };
+    }
+    const user = global.db.data.users[m.sender];
+
+    const bet = parseInt(args[0]) || 4;
+    if (isNaN(bet) || bet <= 0) return m.reply("Inserisci una puntata valida!");
+    if (user.messaggi < bet) return m.reply("Non hai abbastanza messaggi per scommettere!");
+
+    const emojis = ["🤪", "🙈", "👑"];
+    const randomEmoji = () => emojis[Math.floor(Math.random() * emojis.length)];
+
+    const wait = (ms) => new Promise(res => setTimeout(res, ms));
+
+    // Slot iniziale con emoji casuali già visibili
+let slot = Array.from({ length: 3 }, () => Array(3).fill("").map(randomEmoji));
+
+    const formatSlot = (s) => `🎰 𝐒𝐋𝐎𝐓 𝐌𝐀𝐂𝐇𝐈𝐍𝐄 🎰\n\n` +
+        `\t${s[0][0]} ┃ ${s[1][0]} ┃ ${s[2][0]}\n` +
+        `\t${s[0][1]} ┃ ${s[1][1]} ┃ ${s[2][1]}\n` +
+        `\t${s[0][2]} ┃ ${s[1][2]} ┃ ${s[2][2]}\n\n`;
+
+    // Invia primo messaggio
+    let sent = await m.reply(formatSlot(slot));
+
+    // Animazione della slot (3 frame)
+    for (let i = 0; i < 4; i++) {
+        slot = Array.from({ length: 3 }, () => Array(3).fill("").map(randomEmoji));
+        await wait(400);
+        await conn.sendMessage(m.chat, { text: formatSlot(slot), edit: sent.key });
+    }
+
+    // Riga centrale per il risultato
+    const middleRow = [slot[0][1], slot[1][1], slot[2][1]];
+    let resultText = "";
+    let resultEmoji = "";
+    let win = false;
+
+    if (isOwner || (middleRow[0] === middleRow[1] && middleRow[1] === middleRow[2])) {
+        const reward = bet * 3;
+        user.messaggi += reward;
+        user.vittorie++;
+        resultText = `✦ 𝐕𝐢𝐭𝐭𝐨𝐫𝐢𝐚! ✦\n𝐇𝐚𝐢 𝐯𝐢𝐧𝐭𝐨: +${reward} messaggi`;
+        resultEmoji = "🏆";
+        win = true;
+    } else if (middleRow[0] === middleRow[1] || middleRow[1] === middleRow[2] || middleRow[0] === middleRow[2]) {
+        user.messaggi -= bet;
+        user.sconfitte++;
+        resultText = `𝐒𝐜𝐨𝐧𝐟𝐢𝐭𝐭𝐚!\n𝐇𝐚𝐢 𝐩𝐞𝐫𝐬𝐨: -${bet} messaggi`;
+        resultEmoji = "😵";
+    } else {
+        user.messaggi -= bet;
+        user.sconfitte++;
+        resultText = `𝐒𝐜𝐨𝐧𝐟𝐢𝐭𝐭𝐚!\n𝐇𝐚𝐢 𝐩𝐞𝐫𝐬𝐨: -${bet} messaggi`;
+        resultEmoji = "🥶";
+    }
+
+    if (user.messaggi < 0) user.messaggi = 0;
+
+    const final = `${formatSlot(slot)}${resultEmoji} ${resultText}\n` +
+                  `💬 Saldo attuale: ${user.messaggi} messaggi`;
+
+    await wait(500);
+    await conn.sendMessage(m.chat, { text: final, edit: sent.key, mentions: [m.sender] });
+};
+
+handler.help = ['slot [numero]'];
+handler.tags = ['game'];
+handler.command = ['slot'];
+
+export default handler;

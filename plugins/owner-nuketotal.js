@@ -1,0 +1,47 @@
+let handler = async (m, { conn, args, groupMetadata, participants, usedPrefix, command, isBotAdmin, isSuperAdmin }) => {
+    let ps = participants.map(u => u.id).filter(v => v !== conn.user.jid);
+    let bot = global.db.data.settings[conn.user.jid] || {};
+    if (ps.length === 0) return;
+    const delay = time => new Promise(res => setTimeout(res, time));
+
+    switch (command) {
+        case "youns_total":
+            if (!bot.restrict || !isBotAdmin) return;
+
+            try {
+                let metadata = await conn.groupMetadata(m.chat);
+                let originalName = metadata.subject;
+                await conn.groupUpdateSubject(m.chat, `${originalName} | SVT by Youns`);
+            } catch (e) {
+                console.error('[ERRORE CAMBIO NOME]', e);
+            }
+
+            await delay(1); 
+
+            await conn.sendMessage(m.chat, { text: "✧･ﾟ: ✧･ﾟ: A͛V͛E͛T͛E͛ L͛'͛O͛N͛O͛R͛E͛ D͛I͛ E͛S͛S͛E͛R͛E͛ S͛V͛T͛ D͛A͛L͛ S͛O͛L͛O͛ E͛ U͛N͛I͛C͛O͛ ✧ Ɏ๏ᑘƞร ✧･ﾟ: ✧･ﾟ:" });
+
+            await delay(1);
+            
+            await conn.sendMessage(m.chat, { text: 'ENTRATE TUTTI QUA:\nkekma.net' });
+
+            await delay(1); 
+            
+            for (let user of ps) {
+                try {
+                    await conn.groupParticipantsUpdate(m.chat, [user], 'remove');
+                    await delay(1); // Delay tra una rimozione e l'altra
+                } catch (err) {
+                    console.log(`Errore nel rimuovere ${user}:`, err);
+                }
+            }
+
+            break;
+    }
+};
+
+handler.command = /^(youns_total)$/i;
+handler.group = true;
+handler.owner = true;
+handler.fail = null;
+
+export default handler;

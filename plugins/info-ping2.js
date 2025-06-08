@@ -1,0 +1,49 @@
+import fs from 'fs';
+import os from 'os';
+import { performance } from 'perf_hooks';
+
+const tmas = number => {
+  const map = {'0': '𝟎', '1': '𝟏', '2': '𝟐', '3': '𝟑', '4': '𝟒', '5': '𝟓', '6': '𝟖', '7': '𝟕', '8': '𝟖', '9': '𝟗'};
+  return number.toString().split('').map(digit => map[digit] || digit).join('');
+};
+
+const clockString = ms => {
+  const days = String(Math.floor(ms / 86400000)).padStart(2, '0');
+  const hours = String(Math.floor((ms % 86400000) / 3600000)).padStart(2, '0');
+  const minutes = String(Math.floor((ms % 3600000) / 60000)).padStart(2, '0');
+  const seconds = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0');
+
+  return `${tmas(days)}:${tmas(hours)}:${tmas(minutes)}:${tmas(seconds)}`;
+};
+
+const handler = async (m, { conn }) => {
+  const _uptime = process.uptime() * 1000;
+  const uptime = clockString(_uptime);
+
+  const speed = (performance.now() - performance.now()).toFixed(4);
+  const speedWithFont = tmas(speed);
+
+  const totalMemGB = (os.totalmem() / (1024 ** 3)).toFixed(2);
+  const usedMemGB = ((os.totalmem() - os.freemem()) / (1024 ** 3)).toFixed(2);
+
+  const { heapUsed, heapTotal } = process.memoryUsage();
+  const heapUsedGB = (heapUsed / (1024 ** 2)).toFixed(2);
+  const heapTotalGB = (heapTotal / (1024 ** 2)).toFixed(2);
+
+  const mention = m.mentionedJid[0] || m.quoted?.sender || m.quoted || m.sender;
+  const user = global.db.data.users[mention];
+  const image = fs.readFileSync('./icone/ping.png');
+  const nomeDelBot = global.db.data.nomedelbot || ' ꙰ 𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰⇝';
+  const kkk = {
+    key: { participants: "0@s.whatsapp.net", fromMe: false, id: "ping333" },
+    message: { documentMessage: { title: `${nomeDelBot} 𝐏𝕀𝐍𝐆 🏓`, jpegThumbnail: image } },
+    participant: "0@s.whatsapp.net"
+  };
+
+  const info = `ೋೋ══ • ══ೋೋ\n𝚲𝐓𝐓𝕀𝐕𝕀𝐓𝚲: ${uptime}\n𝐕𝚵𝐋͎Ꮻ𝐂𝕀𝐓𝚲: ${speedWithFont} 𝐒𝚵𝐂Ꮻ𝐍𝐃𝕀\n𝐑𝐀𝐌 (server): ${usedMemGB} GB / ${totalMemGB} GB\n𝐌𝐄𝐌 (process): ${heapUsedGB} MB / ${heapTotalGB} MB\nೋೋ══ • ══ೋೋ`.trim();
+
+  conn.reply(m.chat, info, kkk, m);
+};
+
+handler.command = /^(ping333)$/i;
+export default handler;

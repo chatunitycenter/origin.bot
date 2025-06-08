@@ -1,0 +1,36 @@
+import fs from 'fs';
+
+async function handler(m, { isBotAdmin, isOwner, text, conn }) {
+  if (!isBotAdmin) return m.reply('ⓘ Devo essere admin per poter funzionare.');
+
+  if (!text) return m.reply('ⓘ Devi specificare un numero. Esempio: .add 39 327 171 0598');
+
+ 
+  const rawNumber = text.replace(/[^\d+]/g, '');
+  const normalized = rawNumber.startsWith('+') ? rawNumber : '+' + rawNumber;
+
+  const jid = normalized.replace('+', '') + '@s.whatsapp.net';
+  const groupMetadata = conn.chats[m.chat]?.metadata;
+  if (!groupMetadata) return m.reply('ⓘ Questo comando può essere usato solo nei gruppi.');
+
+  try {
+    await conn.groupParticipantsUpdate(m.chat, [jid], 'add');
+
+    const senderTag = `@${m.sender.split`@`[0]}`;
+    const newUserTag = `@${normalized.replace('+', '')}`;
+    
+    conn.reply(m.chat, `✅ ${senderTag} ha aggiunto ${newUserTag} al gruppo!`, null, { 
+      mentions: [m.sender, jid] 
+    });
+
+  } catch (error) {
+    console.error("Errore durante l'aggiunta:", error);
+    m.reply(
+      '❌ Non sono riuscito ad aggiungere il numero. Assicurati che sia valido, che io sia admin e che il gruppo non abbia restrizioni.'
+    );
+  }
+}
+
+handler.command = ['add'];
+
+export default handler;

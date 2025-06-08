@@ -1,0 +1,27 @@
+import fs from 'fs'
+
+let handler = async (m, { conn }) => {
+  const filePath = './storage/termux.txt'
+
+  // Controlla se il file esiste
+  if (!fs.existsSync(filePath)) {
+    return m.reply('Il file termux.txt non esiste nella cartella /storage.')
+  }
+
+  // Legge il contenuto del file
+  let contenuto = fs.readFileSync(filePath, 'utf-8').trim()
+
+  if (!contenuto) {
+    return m.reply('Il file termux.txt è vuoto.')
+  }
+
+  // Manda il contenuto come messaggio
+  conn.sendMessage(m.chat, { text: contenuto }, { quoted: m })
+}
+
+handler.command = /^termux$/i;
+handler.tags = ['utils']
+handler.help = ['.termux']
+
+export default handler
+

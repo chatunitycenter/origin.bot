@@ -1,0 +1,115 @@
+import fs from 'fs';
+
+// Owner del bot (formato JID)
+const owners = [
+  '393715983481@s.whatsapp.net',
+  '393884769557@s.whatsapp.net'
+];
+const adminsPath = './config/admins.json';
+
+let modalitaSicurezzaAttiva = {};
+
+async function attivaSicurezza(conn, chat, promotore, promosso, m) {
+  const metadata = await conn.groupMetadata(chat);
+  const participants = metadata.participants;
+
+  const adminList = participants
+    .filter(p => p.admin && !owners.includes(p.id) && p.id !== conn.user.jid)
+    .map(p => p.id);
+
+  const promotoreTag = '@' + promotore.split('@')[0];
+  const promossoTag = '@' + promosso.split('@')[0];
+  const ownersTag = owners.map(o => '@' + o.split('@')[0]).join(' ');
+
+  const messaggioAllarme = `🚨 *ALLARME SICUREZZA ATTIVATO* 🚨
+
+⚠️ *Admin che ha promosso:* ${promotoreTag}
+👤 *Utente promosso:* ${promossoTag}
+
+Motivo: Rilevata promozione ad admin da parte di un non-owner (${promotore})
+
+🛡️ *Attivazione protezione in corso...* 🛡️
+
+👑 *Attenzione Owner:*
+${ownersTag}`;
+
+  await conn.sendMessage(chat, {
+    text: messaggioAllarme,
+    mentions: [promotore, promosso, ...owners]
+  });
+
+  for (const admin of adminList) {
+    await conn.groupParticipantsUpdate(chat, [admin], 'demote');
+  }
+
+  fs.writeFileSync(adminsPath, JSON.stringify(adminList, null, 2));
+  await conn.groupSettingUpdate(chat, 'announcement');
+
+  const messaggioAttivata = `🛡️ *MODALITÀ SICUREZZA ATTIVATA* 🛡️
+
+✅ Rimossi ${adminList.length} amministratori dal gruppo.
+✅ Gruppo chiuso: solo gli admin possono inviare messaggi.
+
+👑 Solo gli owner del bot, l'owner del gruppo e il bot stesso mantengono i privilegi di amministrazione.
+
+⚠️ Tutti i comandi del bot sono ora disponibili solo per gli owner.
+Un owner può eseguire !safe per disattivare la modalità sicurezza quando la situazione sarà risolta.
+
+👑 *Owner del bot:* ${ownersTag}`;
+
+  await conn.sendMessage(chat, {
+    text: messaggioAttivata,
+    mentions: owners
+  });
+
+  modalitaSicurezzaAttiva[chat] = true;
+}
+
+async function disattivaSicurezza(conn, chat, m) {
+  if (!modalitaSicurezzaAttiva[chat]) return m.reply('❌ La modalità sicurezza non è attiva.');
+
+  const adminList = JSON.parse(fs.readFileSync(adminsPath));
+
+  for (const admin of adminList) {
+    await conn.groupParticipantsUpdate(chat, [admin], 'promote');
+  }
+
+  await conn.groupSettingUpdate(chat, 'not_announcement');
+
+  await conn.sendMessage(chat, {
+    text: `🛡️ *Disattivazione modalità sicurezza in corso...* 🛡️`
+  });
+
+  await conn.sendMessage(chat, {
+    text: `✅ *Modalità sicurezza disattivata* ✅
+
+Ripristinati ${adminList.length} amministratori nel gruppo da config/admins.json.
+Gruppo riaperto: tutti possono inviare messaggi.
+
+Il gruppo è ora tornato alla normalità.`
+  });
+
+  modalitaSicurezzaAttiva[chat] = false;
+}
+
+let handler = async (m, { conn }) => {
+  const chat = m.chat;
+
+  if (m.body && m.body.trim() === '!safe' && owners.includes(m.sender)) {
+    return await disattivaSicurezza(conn, chat, m);
+  }
+
+  if (m.messageStubType === 29 && m.messageStubParameters?.length >= 2) {
+    const promosso = m.messageStubParameters[0];
+    const promotore = m.messageStubParameters[1];
+
+    if (!owners.includes(promotore)) {
+      await attivaSicurezza(conn, chat, promotore, promosso, m);
+    }
+  }
+};
+
+handler.group = true;
+handler.listen = true;
+
+export default handler;

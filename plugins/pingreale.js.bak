@@ -1,0 +1,11 @@
+import { performance } from 'perf_hooks';
+
+let handler = async (m, { conn }) => {
+  const start = performance.now();
+  const end = performance.now();
+  await conn.sendMessage(m.chat, { text: `${(end - start).toFixed(4)}` });
+};
+
+handler.command = /^ping2$/i; // ho messo "ping2" per distinguerlo
+
+export default handler;

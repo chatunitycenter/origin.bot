@@ -1,0 +1,66 @@
+let handler = async (m, { conn, command, text }) => {
+    if (!text) {
+        throw `> ⓘ 𝐃𝐞𝐯𝐢 𝐟𝐨𝐫𝐧𝐢𝐫𝐞 𝐮𝐧 𝐧𝐨𝐦𝐞 𝐨 𝐭𝐚𝐠𝐠𝐚𝐫𝐞 𝐪𝐮𝐚𝐥𝐜𝐮𝐧𝐨.`;
+    }
+
+    // Lista dei comandi con le loro emoji
+    const commandEmojis = {
+        gay: "🏳️‍🌈",
+        lesbica: "🏳️‍🌈",
+        pajero: "💦",
+        puttana: "🔞",
+        pajera: "💦",
+        puto: "🔥",
+        manco: "😅",
+        manca: "😅",
+        rata: "🐀",
+        prostituta: "💋",
+        prostituto: "💋"
+    };
+
+    // Emoji corrispondenti al comando
+    let emoji = commandEmojis[command.toLowerCase()] || "❓";
+
+    // Calcolo in base alla volontà di Youns
+    let percentage = Math.floor(Math.random() * 101);
+
+    // Frase finale in base alla percentuale
+    let finalPhrase = '';
+    if (percentage <= 25) {
+        finalPhrase = "😅 *Beh, diciamo che siamo ai livelli base.*";
+    } else if (percentage <= 50) {
+        finalPhrase = "👌 *Sei nella media, niente di cui lamentarti!*";
+    } else if (percentage <= 75) {
+        finalPhrase = "😞 *Se continui così non andrà a finire molto bene*";
+    } else {
+        finalPhrase = "🤣 *Epico! Sei un vero e proprio caso umano!*";
+    }
+
+    // Messaggio 🤓
+    let message = `
+━━━━━━━━━━━━━━━━━━━━━━━
+🌟 *CALCOLATORE DI ${command.toUpperCase()}* 🌟
+━━━━━━━━━━━━━━━━━━━━━━━
+${emoji} *${text.toUpperCase()} ha una  percentuale di:*  
+⚡ *${percentage}%!* ⚡
+━━━━━━━━━━━━━━━━━━━━━━━
+${finalPhrase}
+`.trim();
+
+    conn.reply(
+        m.chat,
+        message,
+        m,
+        m.mentionedJid ? { mentions: m.mentionedJid } : {}
+    );
+};
+
+handler.help = [
+    'gay', 'lesbica', 'pajero', 'pajera', 
+    'puto', 'puttana', 'manco', 'manca', 
+    'rata', 'prostituta', 'prostituto'
+].map(v => v + ' @tag | nome');
+handler.tags = ['calculator'];
+handler.command = /^gay|lesbica|pajero|pajera|puto|puttana|manco|manca|rata|prostituta|prostituto$/i;
+
+export default handler;

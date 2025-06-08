@@ -1,0 +1,67 @@
+import fs from 'fs'
+import path from 'path'
+import syntaxError from 'syntax-error'
+
+const _fs = fs.promises;
+
+let handler = async (m, { text, usedPrefix, command }) => {
+    try {
+        if (!text) {
+            throw `
+> 𝐔𝐭𝐢𝐥𝐢𝐳𝐳𝐨 : ${usedPrefix + command} <𝐧𝐨𝐦𝐞 𝐟𝐢𝐥𝐞>
+
+> 𝐄𝐬𝐞𝐦𝐩𝐢𝐨:
+        ${usedPrefix}getfile main.js
+        ${usedPrefix}getplugin owner
+`.trim();
+        }
+
+        // Prevenzione di attacchi Path Traversal
+        const sanitizedText = text.replace(/(\.\.[/\\])/g, '');
+        const isPluginCommand = /p(lugin)?/i.test(command);
+        const filename = isPluginCommand 
+            ? `${sanitizedText}${sanitizedText.endsWith('.js') ? '' : '.js'}` 
+            : sanitizedText;
+
+        // Percorso completo
+        const filePath = path.resolve('./', filename);
+
+        // Controllo esistenza file
+        if (!fs.existsSync(filePath)) {
+            throw `⛔️ File *${filename}* non trovato!`;
+        }
+
+        // Lettura file
+        const fileContent = await _fs.readFile(filePath, 'utf8');
+
+        // Verifica di sintassi per file JS
+        if (filename.endsWith('.js')) {
+            const error = syntaxError(fileContent, filename, {
+                sourceType: 'module',
+                allowReturnOutsideFunction: true,
+                allowAwaitOutsideFunction: true,
+            });
+            if (error) {
+                return await m.reply(`
+⛔️ Errore di sintassi in *${filename}*:
+
+${error}
+`.trim());
+            }
+        }
+
+        // Invio del contenuto del file
+        await m.reply(fileContent);
+    } catch (err) {
+        // Gestione degli errori
+        await m.reply(`⚠️ Errore: ${err.message}`);
+    }
+};
+
+// Configurazione del comando
+handler.help = ['plugin', 'file'].map(v => `get${v} <nome file>`);
+handler.tags = ['owner'];
+handler.command = /^g(et)?(p(lugin)?|f(ile)?)$/i;
+handler.rowner = true;
+
+export default handler;

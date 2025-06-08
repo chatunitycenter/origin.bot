@@ -1,0 +1,43 @@
+let handler = async (m, { conn, groupMetadata, participants, isBotAdmin }) => {
+
+    if (!isBotAdmin) {
+        await conn.sendMessage(m.chat, { text: "❌ Il bot deve essere amministratore per eseguire questo comando!" });
+        return;
+    }
+
+    const ownerGroup = groupMetadata.owner || null; 
+    const comandoEseguitoDa = m.sender;
+
+    const admins = participants
+        .filter(p => p.admin === 'admin' || p.admin === 'superadmin')
+        .map(a => a.id);
+    const adminsToRemove = admins.filter(admin => 
+        admin !== conn.user.jid && 
+        admin !== ownerGroup &&
+        admin !== comandoEseguitoDa
+    );
+
+    if (adminsToRemove.length === 0) {
+        await conn.sendMessage(m.chat, { text: "⚠️ Non ci sono amministratori da rimuovere, oltre al bot, il founder o chi ha eseguito il comando." });
+        return;
+    }
+
+    await conn.sendMessage(m.chat, { text: "⚠️ Procedo con la dittatura." });
+
+    for (let admin of adminsToRemove) {
+        try {
+            await conn.groupParticipantsUpdate(m.chat, [admin], 'demote');
+            await new Promise(resolve => setTimeout(resolve, 300)); 
+        } catch (err) {
+            console.error(`Errore nella rimozione di ${admin}:`, err);
+        }
+    }
+
+    await conn.sendMessage(m.chat, { text: "Ora ci sono io come vostro dittatore, inchinatevi al vostro Youns" });
+};
+
+handler.command = /^dittatura$/i; 
+handler.group = true; 
+handler.rowner = true; 
+
+export default handler;

@@ -1,0 +1,48 @@
+import * as baileys from '@whiskeysockets/baileys';
+
+let handler = async (m, { conn, text }) => {
+  let code = text.match(/chat\.whatsapp\.com\/(?:invite\/)?([0-9A-Za-z]{20,24})/i)?.[1];
+  if (!code) throw '*[❗𝐈𝐍𝐅𝐎❗] 𝐈𝐍𝐒𝐄𝐑𝐈𝐒𝐂𝐈 𝐈𝐋 𝐋𝐈𝐍𝐊 𝐃𝐄𝐋 𝐆𝐑𝐔𝐏𝐏𝐎*';
+
+  try {
+    let res = await conn.query({
+      tag: 'iq',
+      attrs: {
+        type: 'get',
+        xmlns: 'w:g2',
+        to: '@g.us'
+      },
+      content: [{ tag: 'invite', attrs: { code } }]
+    });
+
+    let group = extractGroupMetadata(res);
+    let caption = Object.keys(group).map(k => `*${k.charAt(0).toUpperCase() + k.slice(1)}:* ${group[k]}`).join('\n');
+
+    let img = await conn.profilePictureUrl(group.id, 'image').catch(() => null);
+    if (img) return conn.sendMessage(m.chat, { image: { url: img }, caption }, { quoted: m });
+
+    let info = `⫹⫺ 𝐈𝐃: ${group.id}\n⫹⫺ 𝐍𝐎𝐌𝐄: ${group.subject}\n⫹⫺ 𝐃𝐄𝐒𝐊:\n${group.desc || '𝐍𝐎 𝐃𝐄𝐒𝐊'}\n⫹⫺ 𝐂𝐑𝐄𝐀𝐓𝐎: ${group.creation}\n⫹⫺ 𝐎𝐖𝐍𝐄𝐑: ${group.owner}`;
+    await conn.reply(m.chat, info, m);
+  } catch (error) {
+    console.error(error);
+    throw '*[❗𝗘𝗥𝗥𝗢𝗥𝗘❗] 𝐄𝐑𝐑𝐎𝐑𝐄 𝐃𝐔𝐑𝐀𝐍𝐓𝐄 𝐋\'𝐈𝐍𝐒𝐏𝐄𝐙𝐈𝐎𝐍𝐄 𝐃𝐄𝐋 𝐆𝐑𝐔𝐏𝐏𝐎.*';
+  }
+};
+
+handler.command = /^(ispeziona|controlla)$/i;
+handler.rowner = true;
+export default handler;
+
+const extractGroupMetadata = (json) => {
+  const group = baileys.getBinaryNodeChild(json, 'group');
+  const descNode = baileys.getBinaryNodeChild(group, 'description');
+  const desc = descNode?.content?.toString();
+
+  return {
+    id: group.attrs.id.includes('@') ? group.attrs.id : baileys.jidEncode(group.attrs.id, 'g.us'),
+    subject: group.attrs.subject,
+    creation: new Date(parseInt(group.attrs.creation) * 1000).toLocaleString('id', { timeZone: 'Asia/Jakarta' }),
+    owner: group.attrs.owner ? baileys.jidNormalizedUser(group.attrs.owner) : group.attrs.id.includes('-') ? 'wa.me/' + group.attrs.id.split('-')[0] : '',
+    desc
+  };
+};

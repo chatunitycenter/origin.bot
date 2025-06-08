@@ -1,0 +1,54 @@
+const handler = async (m, { conn, args }) => {
+  const pets = {
+    Gatto: 1000,
+    Cane: 2000,
+    Drago: 5000,
+    Volpe: 3500,
+    Panda: 4000,
+    Tigre: 8000,
+    Nico: 30000,
+    Carla: 30000,
+    Pekka: 30000 
+  };
+
+  const petArg = args[0]?.toLowerCase();
+  if (!petArg) {
+    return m.reply("❌ Specifica un pet valido. Usa `.listapet` per vedere gli animali disponibili.");
+  }
+
+  const petMap = {
+    gatto: "Gatto",
+    cane: "Cane",
+    drago: "Drago",
+    volpe: "Volpe",
+    panda: "Panda",
+    tigre: "Tigre",
+    nico: "Nico",
+    carla: "Carla",
+    pekka: "Mini P.E.K.K.A"
+  };
+
+  const pet = petMap[petArg];
+  if (!pet || !pets[pet.replace("Mini P.E.K.K.A", "Pekka")]) {
+    return m.reply("❌ Pet non valido. Usa `.listapet` per vedere quelli disponibili.");
+  }
+
+  const prezzo = pets[pet.replace("Mini P.E.K.K.A", "Pekka")];
+  const user = global.db.data.users[m.sender];
+  if (!user.pets) user.pets = [];
+
+  if (user.pets.includes(pet)) {
+    return m.reply(`❌ Hai già il pet ${pet}.`);
+  }
+
+  if (user.messaggi < prezzo) {
+    return m.reply(`❌ Ti servono ${prezzo} messaggi per comprare ${pet}, ne hai ${user.messaggi}.`);
+  }
+
+  user.messaggi -= prezzo;
+  user.pets.push(pet);
+  return m.reply(`✅ Complimenti! Hai adottato ${pet}!\nMessaggi rimanenti: ${user.messaggi}`);
+};
+
+handler.command = /^(pet|comprapet)$/i;
+export default handler;

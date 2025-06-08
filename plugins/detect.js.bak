@@ -1,0 +1,80 @@
+//Codice di autodetect.js
+
+//credit by instagram.com/fedspoe (+39 338 247 9117)
+const handler = m => m
+handler.all = async function (m) {
+  let pic
+  if (m.messageStubType == 27) { 
+    try {
+      pic = await conn.profilePictureUrl(m.messageStubParameters[0], 'image');
+    } catch (error) {
+      pic = null
+    }
+    conn.sendMessage(m.chat, {
+      text: `@${m.sender.split('@')[0]} ha accettato la richiesta di @${m.messageStubParameters[0].split('@')[0]}`,
+      contextInfo: {
+        mentionedJid: [m.sender, m.messageStubParameters[0]],
+        forwardingScore: 99,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+          newsletterJid: '120363183866911305@newsletter',
+          serverMessageId: '',
+          newsletterName: `${nomebot}`
+        },
+        externalAdReply: {
+          title: '𝗕𝗘𝗡𝗩𝗘𝗡𝗨𝗧𝗢/𝗔 👋🏻',
+          thumbnail: pic ? await (await fetch(pic)).buffer() : await (await fetch('https://telegra.ph/file/17e7701f8b0a63806e312.png')).buffer(),
+        }
+      }
+    })
+
+  } else if (m.messageStubType == 29) {
+    try {
+      pic = await conn.profilePictureUrl(m.messageStubParameters[0], 'image');
+    } catch (error) {
+      pic = null
+    }
+    conn.sendMessage(m.chat, {
+      text: `@${m.sender.split('@')[0]} 𝐡𝐚 𝐝𝐚𝐭𝐨 𝐢 𝐩𝐨𝐭𝐞𝐫𝐢 𝐚 @${m.messageStubParameters[0].split('@')[0]}`,
+      contextInfo: {
+        mentionedJid: [m.sender, m.messageStubParameters[0]],
+        forwardingScore: 99,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+          newsletterJid: '120363183866911305@newsletter',
+          serverMessageId: '',
+          newsletterName: `${nomebot}`
+        },
+        externalAdReply: {
+          title: 'Messaggio di promozione 👑',
+          thumbnail: pic ? await (await fetch(pic)).buffer() : await (await fetch('https://telegra.ph/file/17e7701f8b0a63806e312.png')).buffer(),
+        }
+      }
+    })
+
+  } else if (m.messageStubType == 30) {
+    try {
+      pic = await conn.profilePictureUrl(m.messageStubParameters[0], 'image');
+    } catch (error) {
+      pic = null
+    }
+    conn.sendMessage(m.chat, {
+      text: `@${m.sender.split('@')[0]} 𝐡𝐚 𝐥𝐞𝐯𝐚𝐭𝐨 𝐢 𝐩𝐨𝐭𝐞𝐫𝐢 𝐚 @${m.messageStubParameters[0].split('@')[0]}`,
+      contextInfo: {
+        mentionedJid: [m.sender, m.messageStubParameters[0]],
+        forwardingScore: 99,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+          newsletterJid: '120363183866911305@newsletter',
+          serverMessageId: '',
+          newsletterName: `${nomebot}`
+        },
+        externalAdReply: {
+          title: 'Messaggio di retrocessione 🙇🏻‍♂️',
+          thumbnail: pic ? await (await fetch(pic)).buffer() : await (await fetch('https://telegra.ph/file/17e7701f8b0a63806e312.png')).buffer(),
+        }
+      }
+    })
+  }
+}
+export default handler

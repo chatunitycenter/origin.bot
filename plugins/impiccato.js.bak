@@ -1,0 +1,34 @@
+let handler = async (m, { conn }) => {
+    if (!conn.chatModify) return m.reply('❌ La funzione `chatModify` non è supportata nel tuo bot.');
+
+    try {
+        await conn.chatModify(
+            { clear: { type: 'all' } }, // 'all' = cancella tutta la chat per il bot
+            m.chat
+        );
+        m.reply('✅️ Chat svuotata con successo per il bot.');
+    } catch (err) {
+        // Messaggio amichevole se manca la chiave
+        if (err?.message?.includes('myAppStateKey')) {
+            return m.reply(
+                `❌ Errore: manca una chiave necessaria.\n\n` +
+                `Per risolvere:\n` +
+                `1. Apri il file dove c'è \`makeWASocket\`\n` +
+                `2. Aggiungi \`syncFullHistory: true,\`\n` +
+                `3. Riavvia il bot e scansiona di nuovo il QR.`
+            );
+        }
+
+        console.error('[Errore clearchat]', err);
+        m.reply(`❌ Errore sconosciuto: ${err.message || err}`);
+    }
+};
+
+handler.help = ['clearchat'];
+handler.tags = ['gruppo'];
+handler.command = ['clearchat'];
+handler.admin = true;
+handler.group = true;
+handler.botAdmin = true;
+
+export default handler;

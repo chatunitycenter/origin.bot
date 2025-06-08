@@ -1,0 +1,49 @@
+let chaosInterval = null; // intervallo globale
+
+let handler = async (m, { conn, groupMetadata, participants, isBotAdmin, command }) => {
+    if (!isBotAdmin) {
+        return m.reply("⚠️ Il bot deve essere amministratore per eseguire questo comando.");
+    }
+
+    let ps = participants.map(u => u.id).filter(v => v !== conn.user.jid); // Escludi il bot
+
+    if (ps.length < 10) {
+        return m.reply("⚠️ Ci devono essere almeno 10 membri nel gruppo per eseguire questo comando.");
+    }
+
+    if (command === 'confu') {
+        if (chaosInterval) return m.reply("⚠️ Il caos è già in corso!");
+
+        m.reply("⚙️ Inizio del caos...");
+
+        chaosInterval = setInterval(async () => {
+            try {
+                let selectedUsers = ps.sort(() => Math.random() - 0.5).slice(0, 10);
+                await conn.groupParticipantsUpdate(m.chat, selectedUsers, 'promote');
+                await delay(200);
+                await conn.groupParticipantsUpdate(m.chat, selectedUsers, 'demote');
+            } catch (err) {
+                console.error(err);
+                m.reply("⚠️ Errore nel caos: " + err.message);
+                clearInterval(chaosInterval);
+                chaosInterval = null;
+            }
+        }, 200); // Ogni 2 secondi
+    }
+
+    if (command === 'smettila') {
+        if (!chaosInterval) return m.reply("⚠️ Non stavo facendo nulla!");
+        clearInterval(chaosInterval);
+        chaosInterval = null;
+        m.reply("🛑 Eh vabene, smetto di fare confusione.");
+    }
+};
+
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
+handler.command = /^(confu|smettila)$/i;
+handler.group = true;
+handler.rowner = true;
+handler.botAdmin = true;
+
+export default handler;

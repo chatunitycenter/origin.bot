@@ -1,0 +1,88 @@
+import os from 'os';
+import util from 'util';
+import humanReadable from 'human-readable';
+import { default as makeWASocket } from '@whiskeysockets/baileys';
+import { promises as fs } from 'fs';
+import { performance } from 'perf_hooks';
+
+let handler = async (m, { conn, usedPrefix }) => {
+  const {
+    antiToxic,
+    antilinkhard,
+    antiPrivate,
+    antitraba,
+    antiArab,
+    antiviewonce,
+    isBanned,
+    welcome,
+    detect,
+    antiLink,
+    sologruppo,
+    soloprivato,
+    antiCall,
+    modoadmin,
+    antiPorno,
+    jadibot,
+    gpt
+  } = global.db.data.chats[m.chat] || {};
+
+  const botName = global.db.data.nomedelbot || "ᴼʳⁱᵍⁱⁿ ᴮᵒᵗ✦";
+
+  const status = (bool) => bool ? '✅' : '❌';
+
+  const list = `
+╭━━━❰ *𝐌𝐞𝐧𝐮 𝐅𝐮𝐧𝐳𝐢𝐨𝐧𝐢* ❱━━━⬣
+┃ ✦ 𝐑𝐞𝐠𝐨𝐥𝐚𝐫𝐢:
+┃   ${status(detect)} 𝐝𝐞𝐭𝐞𝐜𝐭
+┃   ${status(gpt)} 𝐠𝐩𝐭
+┃   ${status(jadibot)} 𝐣𝐚𝐝𝐢𝐛𝐨𝐭
+┃   ${status(welcome)} 𝐛𝐞𝐧𝐯𝐞𝐧𝐮𝐭𝐨
+┃   ${status(sologruppo)} 𝐬𝐨𝐥𝐨𝐠𝐫𝐮𝐩𝐩𝐨
+┃   ${status(soloprivato)} 𝐬𝐨𝐥𝐨𝐩𝐫𝐢𝐯𝐚𝐭𝐨
+┃
+┃ ✦ 𝐀𝐧𝐭𝐢-𝐅𝐮𝐧𝐳𝐢𝐨𝐧𝐢:
+┃   ${status(modoadmin)} 𝐦𝐨𝐝𝐨 𝐚𝐝𝐦𝐢𝐧
+┃   ${status(isBanned)} 𝐛𝐚𝐧𝐠𝐫𝐮𝐩𝐩𝐨
+┃   ${status(antiPorno)} 𝐚𝐧𝐭𝐢𝐩𝐨𝐫𝐧𝐨
+┃   ${status(antiCall)} 𝐚𝐧𝐭𝐢𝐜𝐚𝐥𝐥
+┃   ${status(antiLink)} 𝐚𝐧𝐭𝐢𝐥𝐢𝐧𝐤
+┃   ${status(antiToxic)} 𝐚𝐧𝐭𝐢𝐭𝐨𝐱𝐢𝐜
+╰━━━━━━━━━━━━━━━━━━⬣
+
+💡 *𝐈𝐧𝐟𝐨 𝐬𝐭𝐚𝐭𝐮𝐬:*
+- ✅ » *𝐀𝐭𝐭𝐢𝐯𝐚𝐭𝐨*
+- ❌ » *𝐃𝐢𝐬𝐚𝐭𝐭𝐢𝐯𝐚𝐭𝐨*
+
+💬 *𝐂𝐨𝐦𝐚𝐧𝐝𝐢 𝐔𝐭𝐢𝐥𝐢:*
+» ${usedPrefix}attiva <funzione>
+» ${usedPrefix}disabilita <funzione>
+» ${usedPrefix}infostato
+`.trim();
+
+  await conn.sendMessage(m.chat, {
+    text: list,
+    contextInfo: {
+      externalAdReply: {
+        title: "ᴼʳⁱᵍⁱⁿ ᴮᵒᵗ✦ - 𝐌𝐄𝐍𝐔 𝐅𝐔𝐍𝐙𝐈𝐎𝐍𝐈",
+        body: "𝐁𝐘 𝐘𝐎𝐔𝐍𝐒 - 𝐓𝐇𝐄 𝐋𝐄𝐆𝐄𝐍𝐃",
+        thumbnail: await fs.readFile('./storage/image/origin.jpg'), // Carica l'immagine di anteprima
+        mediaType: 1,
+        showAdAttribution: true,
+        renderLargerThumbnail: true,
+      },
+     // forwardingScore: 1,
+     // isForwarded: true,
+      forwardedNewsletterMessageInfo: {
+        newsletterJid: '120363370244642449@newsletter',
+        serverMessageId: '',
+        newsletterName: botName
+      }
+    }
+  }, { quoted: m });
+};
+
+handler.help = ['funzioni'];
+handler.tags = ['menu'];
+handler.command = /^(funzioni)$/i;
+
+export default handler;

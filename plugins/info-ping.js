@@ -1,0 +1,83 @@
+import os from 'os';
+import 'util';
+import 'human-readable';
+import '@whiskeysockets/baileys';
+import 'fs';
+import fetch from 'node-fetch'; 
+import { performance } from 'perf_hooks';
+
+let handler = async (m, { conn, usedPrefix }) => {
+  try {
+    const uptimeMs = process.uptime() * 1000;
+    const uptimeStr = clockString(uptimeMs);
+    const startTime = performance.now();
+    const endTime = performance.now();
+    const speed = (endTime - startTime).toFixed(4);
+
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const percentUsed = ((usedMem / totalMem) * 100).toFixed(2);
+
+    const totalMemGB = (totalMem / 1024 / 1024 / 1024).toFixed(2);
+    const usedMemGB = (usedMem / 1024 / 1024 / 1024).toFixed(2);
+
+    const botName = global.db?.data?.nomedelbot || "ᴼʳⁱᵍⁱⁿ ᴮᵒᵗ✦";
+    const imageResponse = await fetch('https://telegra.ph/file/2f38b3fd9cfba5935b496.jpg');
+    if (!imageResponse.ok) throw new Error(`Errore durante la richiesta: ${imageResponse.status}`);
+
+    const botStartTime = new Date(Date.now() - uptimeMs);
+    const activationTime = botStartTime.toLocaleString('it-IT', {
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+
+    const message = `
+꧁──────•✦•──────꧂
+                 𝓞𝓻𝓲𝓰𝓲𝓷 𝓑𝓸𝓽
+꧁──────•✦•──────꧂
+
+𝑼𝒑𝒕𝒊𝒎𝒆: ${uptimeStr}  
+𝑽𝒆𝒍𝒐𝒄𝒊𝒕𝒂̀: ${speed} ms  
+𝑹𝑨𝑴 𝒖𝒔𝒂𝒕𝒂: ${usedMemGB} / ${totalMemGB} GB (${percentUsed}%)  
+𝑨𝒗𝒗𝒊𝒐: ${activationTime}
+
+꧁──────•✦•──────꧂
+𝑶𝒘𝒏𝒆𝒓: ʏᴏᴜɴꜱ  
+𝑺𝒕𝒂𝒕𝒐: Online  
+𝑰𝑮: instagram.com/il_mulatto07
+꧁──────•✦•──────꧂
+`.trim();
+
+    await conn.sendMessage(m.chat, {
+      text: message,
+      contextInfo: {
+        mentionedJid: conn.parseMention(botName),
+        // forwardingScore: 1,
+       // isForwarded: true,
+      },
+    });
+  } catch (err) {
+    console.error("Errore nell'handler:", err);
+  }
+};
+
+function clockString(ms) {
+  let h = Math.floor(ms / 3600000);
+  let m = Math.floor((ms % 3600000) / 60000);
+  let s = Math.floor((ms % 60000) / 1000);
+  return [h, m, s]
+    .map(v => v.toString().padStart(2, '0'))
+    .join(':');
+}
+
+handler.help = ['ping'];
+handler.tags = ['info'];
+handler.command = /^(ping|stato|kinderping)$/i;
+
+export default handler;

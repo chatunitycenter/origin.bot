@@ -1,0 +1,68 @@
+import fs from 'fs'; 
+import fetch from 'node-fetch';
+
+let handler = async (msg, { conn, usedPrefix, command, args }) => { 
+    let chatConfig = global.db.data.chats[msg.chat] || {};
+
+    const toggleOptions = {
+        strillo: { configKey: "strillo", label: " *𝑺𝒕𝒓𝒊𝒍𝒍𝒐* " },
+        antifroci: { configKey: "antifroci", label: " *𝑨𝒏𝒕𝒊𝒇𝒓𝒐𝒄𝒊* " },
+        welcome: { configKey: "welcome", label: " *𝑩𝒆𝒏𝒗𝒆𝒏𝒖𝒕𝒐* " },
+        sologruppo: { configKey: "sologruppo", label: " *𝑺𝒐𝒍𝒐𝒈𝒓𝒖𝒑𝒑𝒐* " },
+        soloprivato: { configKey: "soloprivato", label: " *𝑺𝒐𝒍𝒐𝒑𝒓𝒊𝒗𝒂𝒕𝒐* " },
+        modoadmin: { configKey: "modoadmin", label: " *𝑴𝒐𝒅𝒐𝒂𝒅𝒎𝒊𝒏* " },
+        antipaki: { configKey: "antipaki", label: " *𝑨𝒏𝒕𝒊𝒑𝒂𝒌𝒊* " },
+        antimedia: { configKey: "antimedia", label: " *𝑨𝒏𝒕𝒊𝒎𝒆𝒅𝒊𝒂* " },
+        antilink: { configKey: "antilink", label: " *𝑨𝒏𝒕𝒊𝒍𝒊𝒏𝒌* " },
+        antilinktotale: { configKey: "antilinktotale", label: " *𝑨𝒏𝒕𝒊𝒍𝒊𝒏𝒌𝒕𝒐𝒕𝒂𝒍𝒆* " },
+        antiinsta: { configKey: "antiinsta", label: " *𝑨𝒏𝒕𝒊𝒊𝒏𝒔𝒕𝒂* " },
+        antilinkch: { configKey: "antilinkch", label: " *𝑨𝒏𝒕𝒊𝒍𝒊𝒏𝒌𝒄𝒉* " },
+        antitiktok: { configKey: "antitiktok", label: " *𝑨𝒏𝒕𝒊𝒕𝒊𝒌𝒕𝒐𝒌* " },
+        antigiochi: { configKey: "antigiochi", label: " *𝑨𝒏𝒕𝒊𝒈𝒊𝒐𝒄𝒉𝒊* " },
+        antilinkgp: { configKey: "antilinkgp", label: " *𝑨𝒏𝒕𝒊𝒍𝒊𝒏𝒌𝒈𝒑* " },
+        antisbura: { configKey: "antisbura", label: " *𝑨𝒏𝒕𝒊𝒔𝒃𝒖𝒓𝒂* " },
+        stickers: { configKey: "stickers", label: " *𝑺𝒕𝒊𝒄𝒌𝒆𝒓𝒔* " },
+        antisondaggi: { configKey: "antisondaggi", label: " *𝒂𝒏𝒕𝒊𝒔𝒐𝒏𝒅𝒂𝒈𝒈𝒊* " },
+        antilinkhard: { configKey: "antilinkhard", label: " *𝑨𝒏𝒕𝒊𝒍𝒊𝒏𝒌𝒉𝒂𝒓𝒅* " }
+    };
+
+    let enable = /true|enable|abilita|(turn)?on|1/i.test(command);
+    let option = (args[0] || "").toLowerCase();
+
+    if (!option) {
+        let menuText = "❔️ 𝐅𝐮𝐧𝐳𝐢𝐨𝐧𝐞 𝐢𝐧𝐞𝐬𝐢𝐬𝐭𝐞𝐧𝐭𝐞 \n> 𝑫𝒊𝒈𝒊𝒕𝒂 .𝒇𝒖𝒏𝒛𝒊𝒐𝒏𝒊 𝒑𝒆𝒓 𝒔𝒂𝒑𝒆𝒓𝒆 𝒍𝒆 𝒇𝒖𝒏𝒛𝒊𝒐𝒏𝒊 𝒂𝒕𝒕𝒊𝒗𝒂𝒃𝒊𝒍𝒊 𝒆 𝒅𝒊𝒔𝒂𝒕𝒕𝒊𝒗𝒂𝒃𝒊𝒍𝒊.";
+        return conn.sendMessage(msg.chat, { text: menuText }, { quoted: msg });
+    }
+
+    if (!toggleOptions.hasOwnProperty(option)) {
+        return conn.sendMessage(
+            msg.chat,
+            { text: "❔️ 𝐅𝐮𝐧𝐳𝐢𝐨𝐧𝐞 𝐢𝐧𝐞𝐬𝐢𝐬𝐭𝐞𝐧𝐭𝐞 \n> 𝑫𝒊𝒈𝒊𝒕𝒂 .𝒇𝒖𝒏𝒛𝒊𝒐𝒏𝒊 𝒑𝒆𝒓 𝒔𝒂𝒑𝒆𝒓𝒆 𝒍𝒆 𝒇𝒖𝒏𝒛𝒊𝒐𝒏𝒊 𝒂𝒕𝒕𝒊𝒗𝒂𝒃𝒊𝒍𝒊 𝒆 𝒅𝒊𝒔𝒂𝒕𝒕𝒊𝒗𝒂𝒃𝒊𝒍𝒊." },
+            { quoted: msg }
+        );
+    }
+
+    let opt = toggleOptions[option];
+    
+    // Controlla se la funzione esiste in chatConfig, altrimenti la inizializza
+    if (!(opt.configKey in chatConfig)) {
+        chatConfig[opt.configKey] = false;
+    }
+
+    // Aggiorna lo stato della funzione
+    chatConfig[opt.configKey] = enable;
+
+    let stateText = enable ? " *𝑶𝑵* 🟩" : " *𝑶𝑭𝑭* 🟥";
+    return conn.sendMessage(
+        msg.chat,
+        { text: `> ✯ ${opt.label} ➼ ${stateText}` },
+        { quoted: msg }
+    );
+};
+
+handler.help = ["toggle <opzione> [stato]"]; 
+handler.tags = ["config"]; 
+handler.admin = true
+handler.command = /^((abilita|disattiva)|(turn)?[01])$/i;
+
+export default handler;
