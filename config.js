@@ -37,9 +37,9 @@ global.APIs = {
   fgmods: 'https://api-fgmods.ddns.net'
 },
 global.APIKeys = { 
-  'https://api.xteam.xyz': `${keysxteam}`,
+  'https://api.xteam.xyz': ${keysxteam},
   'https://api.lolhuman.xyz': '85faf717d0545d14074659ad',
-  'https://api.neoxr.my.id': `${keysneoxr}`,	
+  'https://api.neoxr.my.id': ${keysneoxr},	
   'https://violetics.pw': 'beta',
 }
 
@@ -68,5 +68,5 @@ let file = fileURLToPath(import.meta.url)
 watchFile(file, () => {
   unwatchFile(file)
   console.log(chalk.redBright("Update 'config.js'"))
-  import(`${file}?update=${Date.now()}`)
+  import(${file}?update=${Date.now()})
 })
