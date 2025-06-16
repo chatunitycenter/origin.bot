@@ -1,107 +1,72 @@
+//Plugin fatto da Gabs & 333 Staff
+import { watchFile, unwatchFile } from 'fs'
+import chalk from 'chalk'
 import fs from 'fs'
+import { fileURLToPath } from 'url'
 
-let whitelist = [
-  '66621409462@s.whatsapp.net', // Numeri autorizzati
-  '393884769557@s.whatsapp.net',
-  '393715983481@s.whatsapp.net',
-  '393806378635@s.whatsapp.net'
+global.botnumber = ""
+global.confirmCode = ""
+
+global.owner = [["18156166414","EMZ",true],["393509540446","kinderì",true],["393884769557","thoka",true],["66621409462","matte",true],["639517705710","cri",true]
 ]
 
-export async function before(m, { conn }) {
-  if (![29, 30].includes(m.messageStubType)) return // Solo eventi promozione/demozione
 
-  const chatId = m.chat
-  const actor = m.participant || m.key?.participant
-  const target = m.messageStubParameters?.[0]
-  if (!chatId || !actor || !target) return
+global.mods = ['xxxxxxxxxx'] 
+global.prems = ['xxxxxxxxxx', 'xxxxxxxxxx']
 
-  // Controlla se antinuke è attivo per il gruppo
-  global.db = global.db || {}
-  global.db.data = global.db.data || {}
-  global.db.data.groups = global.db.data.groups || {}
-  const isActive = global.db.data.groups[chatId]?.antinuke === true
-  if (!isActive) return
+global.keysZens = ['c2459db922', '37CC845916', '6fb0eff124']
+global.keysxxx = keysZens[Math.floor(keysZens.length * Math.random())]
+global.keysxteammm = ['29d4b59a4aa687ca', '5LTV57azwaid7dXfz5fzJu', 'cb15ed422c71a2fb', '5bd33b276d41d6b4', 'HIRO', 'kurrxd09', 'ebb6251cc00f9c63']
+global.keysxteam = keysxteammm[Math.floor(keysxteammm.length * Math.random())]
+global.keysneoxrrr = ['5VC9rvNx', 'cfALv5']
+global.keysneoxr = keysneoxrrr[Math.floor(keysneoxrrr.length * Math.random())]
+global.lolkeysapi = ['BrunoSobrino']
 
-  const metadata = await conn.groupMetadata(chatId)
-  const founder = metadata.owner
-  const botNumber = conn.user.jid
-  const autorizzati = [botNumber, founder, ...whitelist]
-
-  // Se chi ha fatto l'azione è autorizzato, esci
-  if (autorizzati.includes(actor)) return
-
-  // Ottieni lista admin attuali
-  const adminList = metadata.participants.filter(p => p.admin).map(p => p.id)
-
-  // Utenti sospetti: admin non autorizzati + chi ha fatto l'azione + target
-  const sospetti = new Set([
-    ...adminList.filter(id => !autorizzati.includes(id)),
-    actor,
-    target
-  ])
-  const toDemote = [...sospetti].filter(id => !autorizzati.includes(id))
-
-  // Backup admin
-  const backupPath = `./backups/admins-${chatId}.json`
-  fs.mkdirSync('./backups', { recursive: true })
-  fs.writeFileSync(backupPath, JSON.stringify(adminList, null, 2))
-
-  // Gestione tentativi per gruppo
-  global.db.data.groups[chatId].antinukeAttempts = global.db.data.groups[chatId].antinukeAttempts || 0
-  global.db.data.groups[chatId].antinukeAttempts++
-
-  try {
-    // Demote utenti sospetti
-    if (toDemote.length > 0) {
-      await conn.groupParticipantsUpdate(chatId, toDemote, 'demote')
-    }
-  } catch (e) {
-    console.log('[ANTINUKE] Errore nel demote:', e)
-  }
-
-  try {
-    await conn.groupSettingUpdate(chatId, 'announcement')
-  } catch (e) {
-    console.log('[ANTINUKE] Errore nel set announcement:', e)
-  }
-
-  // Ripristina admin autorizzati rimossi
-  const adminBackup = JSON.parse(fs.readFileSync(backupPath))
-  const toRestore = adminBackup.filter(id => autorizzati.includes(id) && !adminList.includes(id))
-
-  if (toRestore.length > 0) {
-    try {
-      await conn.groupParticipantsUpdate(chatId, toRestore, 'promote')
-    } catch (e) {
-      console.log('[ANTINUKE] Errore nel promote:', e)
-    }
-  }
-
-  // Se tentativi >= 3 banna e rimuovi attaccante
-  if (global.db.data.groups[chatId].antinukeAttempts >= 3) {
-    global.db.data.banned = global.db.data.banned || {}
-    global.db.data.banned[actor] = {
-      reason: 'Tentativo di abuso privilegi nel gruppo',
-      time: Date.now()
-    }
-    try {
-      await conn.groupParticipantsUpdate(chatId, [actor], 'remove')
-    } catch (e) {
-      console.log('[ANTINUKE] Errore nel kick:', e)
-    }
-    // Reset tentativi dopo ban
-    global.db.data.groups[chatId].antinukeAttempts = 0
-  }
-
-  // Avviso nel gruppo
-  const alert = `🚨 *ALLERTA SICUREZZA ATTIVA*\n\n👤 @${actor.split('@')[0]} ha tentato di modificare i privilegi di @${target.split('@')[0]}\n\n🔐 I privilegi sono stati ripristinati.\n` +
-    (global.db.data.groups[chatId].antinukeAttempts === 0 ? '❌ Utente rimosso e bannato.' : `⚠️ Tentativo #${global.db.data.groups[chatId].antinukeAttempts} registrato.`)
-  await conn.sendMessage(chatId, { text: alert, mentions: [actor, target] })
-
-  // Log privato (modifica con tuo JID)
-  const logOwner = '39388xxxxxxx@s.whatsapp.net'
-  await conn.sendMessage(logOwner, {
-    text: `🛡️ *[ANTINUKE TRIGGERED]*\n\nGruppo: ${metadata.subject}\nChat ID: ${chatId}\n\n👤 Attaccante: @${actor.split('@')[0]}\n🎯 Target: @${target.split('@')[0]}\n\n✅ Admin ripristinati: ${toRestore.length}\n❌ Admin rimossi: ${toDemote.length}\n🧱 Utente bannato: ${global.db.data.groups[chatId].antinukeAttempts === 0 ? 'SI' : 'NO'}`,
-    mentions: [actor, target]
-  })
+global.APIs = { 
+  xteam: 'https://api.xteam.xyz', 
+  nrtm: 'https://fg-nrtm-nhie.onrender.com',
+  bg: 'http://bochil.ddns.net',
+  fgmods: 'https://api-fgmods.ddns.net',
+  dzx: 'https://api.dhamzxploit.my.id',
+  lol: 'https://api.lolhuman.xyz',
+  violetics: 'https://violetics.pw',
+  neoxr: 'https://api.neoxr.my.id',
+  zenzapis: 'https://zenzapis.xyz',
+  akuari: 'https://api.akuari.my.id',
+  akuari2: 'https://apimu.my.id',	
+  fgmods: 'https://api-fgmods.ddns.net'
+},
+global.APIKeys = { 
+  'https://api.xteam.xyz': `${keysxteam}`,
+  'https://api.lolhuman.xyz': '85faf717d0545d14074659ad',
+  'https://api.neoxr.my.id': `${keysneoxr}`,	
+  'https://violetics.pw': 'beta',
 }
+
+global.imagen1 = ['./media/menu1.jpg']
+global.imagen4 = fs.readFileSync('./bixbyvision16.png')
+
+global.packname = '𝑶𝒓𝒊𝒈𝒊𝒏'
+global.author = '✦'
+
+global.vs = '𝟐.𝟐'
+global.nomebot = '𝑶𝒓𝒊𝒈𝒊𝒏✦'
+global.multiplier = 69 
+global.maxwarn = '4' 
+
+global.wm = '𝑶𝒓𝒊𝒈𝒊𝒏✦'
+global.wait = 'ⓘ 𝐂𝐚𝐫𝐢𝐜𝐚𝐦𝐞𝐧𝐭𝐨 ...'
+
+global.flaaa = [
+'https://flamingtext.com/net-fu/proxy_form.cgi?&imageoutput=true&script=water-logo&script=water-logo&fontsize=90&doScale=true&scaleWidth=800&scaleHeight=500&fontsize=100&fillTextColor=%23000&shadowGlowColor=%23000&backgroundColor=%23000&text=',
+'https://flamingtext.com/net-fu/proxy_form.cgi?&imageoutput=true&script=crafts-logo&fontsize=90&doScale=true&scaleWidth=800&scaleHeight=500&text=',
+'https://flamingtext.com/net-fu/proxy_form.cgi?&imageoutput=true&script=amped-logo&doScale=true&scaleWidth=800&scaleHeight=500&text=',
+'https://www6.flamingtext.com/net-fu/proxy_form.cgi?&imageoutput=true&script=sketch-name&doScale=true&scaleWidth=800&scaleHeight=500&fontsize=100&fillTextType=1&fillTextPattern=Warning!&text=',
+'https://www6.flamingtext.com/net-fu/proxy_form.cgi?&imageoutput=true&script=sketch-name&doScale=true&scaleWidth=800&scaleHeight=500&fontsize=100&fillTextType=1&fillTextPattern=Warning!&fillColor1Color=%23f2aa4c&fillColor2Color=%23f2aa4c&fillColor3Color=%23f2aa4c&fillColor4Color=%23f2aa4c&fillColor5Color=%23f2aa4c&fillColor6Color=%23f2aa4c&fillColor7Color=%23f2aa4c&fillColor8Color=%23f2aa4c&fillColor9Color=%23f2aa4c&fillColor10Color=%23f2aa4c&fillOutlineColor=%23f2aa4c&fillOutline2Color=%23f2aa4c&backgroundColor=%23101820&text=']
+
+let file = fileURLToPath(import.meta.url)
+watchFile(file, () => {
+  unwatchFile(file)
+  console.log(chalk.redBright("Update 'config.js'"))
+  import(`${file}?update=${Date.now()}`)
+})
